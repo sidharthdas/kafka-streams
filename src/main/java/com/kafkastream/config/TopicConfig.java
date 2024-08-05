@@ -5,24 +5,28 @@ import com.kafkastream.model.LoanDetail;
 import com.kafkastream.model.PersonalLoan;
 import com.kafkastream.topic.Topic;
 import org.apache.kafka.common.serialization.Serdes;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class TopicConfig {
 
-    private String loanTopic;
-    private String homeLoanTopic;
-    private String personLoanTopic;
+    private String loanTopic = "loanTopic";
+    private String homeLoanTopic = "homeLoanTopic";
+    private String personLoanTopic = "personLoanTopic";
 
-    public Topic<Long, LoanDetail> getLoanDetailTopic() {
-        return new Topic<>(Serdes.Long(), Serdes.serdeFrom(LoanDetail.class), loanTopic);
+    @Bean
+    public Topic<String, LoanDetail> getLoanDetailTopic() {
+        return new Topic<>(Serdes.String(), new JsonSerde<>(LoanDetail.class), loanTopic);
     }
 
-    public Topic<Long, HomeLoan> getHomeLoanTopic() {
-        return new Topic<>(Serdes.Long(), Serdes.serdeFrom(HomeLoan.class), homeLoanTopic);
+    @Bean
+    public Topic<String, HomeLoan> getHomeLoanTopic() {
+        return new Topic<>(Serdes.String(), new JsonSerde<>(HomeLoan.class), homeLoanTopic);
     }
 
-    public Topic<Long, PersonalLoan> getPersonalLoanTopic() {
-        return new Topic<>(Serdes.Long(), Serdes.serdeFrom(PersonalLoan.class), personLoanTopic);
+    @Bean
+    public Topic<String, PersonalLoan> getPersonalLoanTopic() {
+        return new Topic<>(Serdes.String(), new JsonSerde<>(PersonalLoan.class), personLoanTopic);
     }
 }

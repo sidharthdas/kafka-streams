@@ -1,10 +1,46 @@
 package com.kafkastream.config;
 
-import org.apache.kafka.common.serialization.Serdes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serializer;
 
-public class JsonSerde<T> extends Serdes.WrapperSerde<T> {
-    public JsonSerde(Class<T> targetClass) {
-        super(new JsonSerializer<>(), new JsonDeserializer<>(targetClass));
+import java.io.IOException;
+
+public class JsonSerde<T> implements Serde<T>{
+
+    private final Class<T> type;
+
+    public JsonSerde(Class<T> type) {
+        this.type = type;
+    }
+
+    @Override
+    public void close() {
+        Serde.super.close();
+    }
+
+    @Override
+    public Serializer<T> serializer() {
+        return (topic, data) -> {
+            try {
+                return new ObjectMapper().writeValueAsBytes(data);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    @Override
+    public Deserializer<T> deserializer() {
+
+        return (topic, data)-> {
+            try {
+                return new ObjectMapper().readValue(data, type);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
     }
 }

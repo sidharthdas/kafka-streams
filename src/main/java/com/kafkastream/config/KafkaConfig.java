@@ -1,5 +1,6 @@
 package com.kafkastream.config;
 
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -48,6 +49,7 @@ public class KafkaConfig {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "my-app-id");
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, JsonDeserializer.class);
+
 
         return props;
     }

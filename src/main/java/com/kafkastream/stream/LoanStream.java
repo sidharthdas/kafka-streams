@@ -4,9 +4,7 @@ import com.kafkastream.config.JsonSerde;
 import com.kafkastream.model.LoanDetail;
 import com.kafkastream.model.PersonalLoan;
 import com.kafkastream.topic.Topic;
-import io.confluent.kafka.streams.serdes.avro.SpecificAvroDeserializer;
 import jakarta.annotation.PostConstruct;
-import lombok.AllArgsConstructor;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -24,15 +22,16 @@ public class LoanStream {
 
     private String loanTopic = "loanTopic";
     private String homeLoanTopic = "homeLoanTopic";
-    private String personalLoanTopic = "personalLoanTopic";
     final Serde<Long> longSerde = Serdes.Long();
-    private Topic<Long, LoanStream> loanStreamTopic;
+
+    @Autowired
+    private Topic<String, PersonalLoan> getPersonalLoanTopic;
 
 
 
     @PostConstruct
     public void buildStream() {
-        /*KStream<Long, PersonalLoan> personalLoanStream = streamsBuilder.stream("loanTopic", Consumed.with(Serdes.Long(), Serdes.serdeFrom(LoanDetail.class)))
+        KStream<String, PersonalLoan> personalLoanStream = streamsBuilder.stream("loanTopic", Consumed.with(Serdes.String(), new JsonSerde<>(LoanDetail.class)))
                 .filter((k, v) -> v.getLoanType().equals("PERSONAL"))
                 .mapValues((k, v) -> {
                     PersonalLoan personalLoan = new PersonalLoan();
@@ -43,17 +42,18 @@ public class LoanStream {
                     personalLoan.setPersonalLoanRateOfInterest(12.5D);
 
                     return personalLoan;
-                });
+                })
+                .peek((k, v) -> System.out.println(v.toString()));
 
-        personalLoanStream.to(personalLoanTopic);*/
+        personalLoanStream.to(getPersonalLoanTopic.getTopicName(), Produced.with(Serdes.String(), new JsonSerde<>(PersonalLoan.class)));
 
-        KStream<Long, String> personalLoanStream1 = streamsBuilder
+        /*KStream<Long, String> personalLoanStream1 = streamsBuilder
                 .stream("loanTopic", Consumed.with(Serdes.Long(), Serdes.String()))
                 .filter((k, v) -> v.startsWith("Mess"))
                 .mapValues((k, v) -> v.toUpperCase())
                 .peek((k, v) -> System.out.println(v));
 
-        personalLoanStream1.to(personalLoanTopic,  Produced.with(Serdes.Long(), Serdes.String()));
+        personalLoanStream1.to(personalLoanTopic,  Produced.with(Serdes.Long(), Serdes.String()));*/
     }
 
 }
