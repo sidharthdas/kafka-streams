@@ -10,6 +10,10 @@ streamsBuilder.build(); -> build() return type is Topology
 
 Example:
 
+## Voice Command Topology:
+<img width="1050" alt="image" src="https://github.com/user-attachments/assets/d55a33b9-ab37-47f1-b282-e5ed7413ca8e">
+
+
 ```
 public Topology voiceCommandParserTopology() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
@@ -61,6 +65,11 @@ public Topology voiceCommandParserTopology() {
         //Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
     }
 ```
+
+## Bank Account Topology : 
+
+<img width="1275" alt="image" src="https://github.com/user-attachments/assets/5122b343-0446-4306-90a1-24dba11d9cf6">
+
 
 
 ## Kafka Commands that will be needed to run this application:
