@@ -1,7 +1,5 @@
 package com.kafkastream.config;
 
-import com.kafkastream.model.HomeLoan;
-import com.kafkastream.model.LoanDetail;
 import com.kafkastream.model.PersonalLoan;
 import com.kafkastream.topic.Topic;
 import org.apache.kafka.common.serialization.Serdes;

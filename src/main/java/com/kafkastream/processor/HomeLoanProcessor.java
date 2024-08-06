@@ -1,7 +1,5 @@
 package com.kafkastream.processor;
 
-import com.kafkastream.model.HomeLoan;
-import com.kafkastream.model.LoanDetail;
 import org.apache.kafka.streams.processor.AbstractProcessor;
 import org.springframework.stereotype.Component;
 
