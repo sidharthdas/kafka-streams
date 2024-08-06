@@ -6,6 +6,7 @@ import com.kafkastream.model.ParsedVoiceCommand;
 import com.kafkastream.model.VoiceCommand;
 import com.kafkastream.service.TranslateService;
 import com.kafkastream.service.VoiceToTextParserService;
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
@@ -27,16 +28,17 @@ public class VoiceCommandParserTopology {
     private final TranslateService translateService;
     private static final Double THRESHOLD = 0.8;
 
+    @PostConstruct
     public void runKafkaStream() {
         Topology topology = voiceCommandParserTopology();
         KafkaStreams kafkaStreams = new KafkaStreams(topology, new StreamsConfiguration().streamsConfig());
 
         kafkaStreams.start();
         //When we shut-down the application, kafka stream will shutdown automatically
-        Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
+        //Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
     }
 
-    private Topology voiceCommandParserTopology() {
+    public Topology voiceCommandParserTopology() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
        /* Scenario:
                 * 1. Once you get the data in the stream, filter audio size > O parse the speech to text (mapValues)
@@ -53,8 +55,9 @@ public class VoiceCommandParserTopology {
                 .mapValues((k, v) -> voiceToTextParserService.parseVoice(v))
                 .split(Named.as("branches-"))
                 .branch((k, v) -> v.getProbability() > THRESHOLD, Branched.as("recognized"))
-                .defaultBranch(Branched.as("branches-un-recognized"));
+                .defaultBranch(Branched.as("un-recognized"));
 
+        System.out.println("Sidharth"+branches);
         branches.get("branches-un-recognized")
                 .to(UNRECOGNISED_VOICE, Produced.with(Serdes.String(), new JsonSerde<>(ParsedVoiceCommand.class)));
 

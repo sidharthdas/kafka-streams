@@ -6,7 +6,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
 
 @EnableKafka
-@EnableKafkaStreams
+//@EnableKafkaStreams
 @SpringBootApplication
 public class KafkaStreamApplication {
 

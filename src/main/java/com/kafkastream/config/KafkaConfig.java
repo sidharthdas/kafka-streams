@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-@Configuration
+///@Configuration
 public class KafkaConfig {
 
 
@@ -38,7 +38,7 @@ public class KafkaConfig {
         return new StreamsConfig(props);
     }
 
-    @Bean
+    //@Bean
     public Map<String, Object> consumerConfig() {
         Map<String, Object> props = new HashMap<>();
 
