@@ -63,7 +63,7 @@ public Topology voiceCommandParserTopology() {
 ```
 
 
-Kafka Commands that will be needed to run this application:
+## Kafka Commands that will be needed to run this application:
 
 ```
 Start Zookeeper: bin/zookeeper-server-start.sh config/zookeeper.properties
