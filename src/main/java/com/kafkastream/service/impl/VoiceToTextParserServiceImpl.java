@@ -10,6 +10,13 @@ public class VoiceToTextParserServiceImpl implements VoiceToTextParserService {
 
     @Override
     public ParsedVoiceCommand parseVoice(VoiceCommand voiceCommand) {
-        return null;
+        return ParsedVoiceCommand
+                .builder()
+                .id(voiceCommand.getId())
+                .text(voiceCommand.getAudioCodec() + "hello")
+                .audioCodec(voiceCommand.getAudioCodec())
+                .language(voiceCommand.getLanguage())
+                .probability(Math.random())
+                .build();
     }
 }

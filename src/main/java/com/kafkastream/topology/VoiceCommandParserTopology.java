@@ -5,6 +5,7 @@ import com.kafkastream.config.StreamsConfiguration;
 import com.kafkastream.model.ParsedVoiceCommand;
 import com.kafkastream.model.VoiceCommand;
 import com.kafkastream.service.TranslateService;
+import com.kafkastream.service.VoiceCommandProducer;
 import com.kafkastream.service.VoiceToTextParserService;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
@@ -27,9 +28,11 @@ public class VoiceCommandParserTopology {
     private final VoiceToTextParserService voiceToTextParserService;
     private final TranslateService translateService;
     private static final Double THRESHOLD = 0.8;
+    private final VoiceCommandProducer producer;
 
     @PostConstruct
-    public void runKafkaStream() {
+    public void runKafkaStream() throws InterruptedException {
+        producer.init();
         Topology topology = voiceCommandParserTopology();
         KafkaStreams kafkaStreams = new KafkaStreams(topology, new StreamsConfiguration().streamsConfig());
 
