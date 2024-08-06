@@ -1,12 +1,31 @@
 package com.kafkastream.topology;
 
+import com.kafkastream.config.JsonSerde;
 import com.kafkastream.config.StreamsConfiguration;
+import com.kafkastream.model.ParsedVoiceCommand;
+import com.kafkastream.model.VoiceCommand;
+import com.kafkastream.service.TranslateService;
+import com.kafkastream.service.VoiceToTextParserService;
+import lombok.AllArgsConstructor;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.*;
+import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
+@AllArgsConstructor
+@Component
 public class VoiceCommandParserTopology {
+
+    private static final String RECOGNISED_VOICE = "recognized-voice-topic";
+    private static final String UNRECOGNISED_VOICE = "unrecognized-voice-topic";
+    private static final String VOICE_COMMAND = "voice-command-topic";
+    private final VoiceToTextParserService voiceToTextParserService;
+    private final TranslateService translateService;
+    private static final Double THRESHOLD = 0.8;
 
     public void runKafkaStream() {
         Topology topology = voiceCommandParserTopology();
@@ -28,6 +47,26 @@ public class VoiceCommandParserTopology {
                 * 6. merge english & translated to english streams
                 * 7. put the data to Kstream*/
 
+        Map<String, KStream<String, ParsedVoiceCommand>> branches = streamsBuilder.stream(VOICE_COMMAND,
+                        Consumed.with(Serdes.String(), new JsonSerde<>(VoiceCommand.class)))
+                .filter((k, v) -> v.getAudio().length > 10)
+                .mapValues((k, v) -> voiceToTextParserService.parseVoice(v))
+                .split(Named.as("branches-"))
+                .branch((k, v) -> v.getProbability() > THRESHOLD, Branched.as("recognized"))
+                .defaultBranch(Branched.as("branches-un-recognized"));
+
+        branches.get("branches-un-recognized")
+                .to(UNRECOGNISED_VOICE, Produced.with(Serdes.String(), new JsonSerde<>(ParsedVoiceCommand.class)));
+
+        Map<String, KStream<String, ParsedVoiceCommand>> languageBranches = branches.get("branches-recognized")
+                .split(Named.as("language-"))
+                .branch((k, v) -> v.getLanguage().startsWith("en-"), Branched.as("english"))
+                .defaultBranch(Branched.as("non-english"));
+
+        languageBranches.get("language-non-english")
+                .mapValues((k, v) -> translateService.toEnglish(v))
+                .merge(languageBranches.get("language-english"))
+                .to(RECOGNISED_VOICE, Produced.with(Serdes.String(), new JsonSerde<>(ParsedVoiceCommand.class)));
 
         return streamsBuilder.build();
     }
