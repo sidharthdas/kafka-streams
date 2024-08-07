@@ -23,13 +23,6 @@ public class BankAccountTopology {
     private static final String BANK_ACCOUNT = "bank-account-topic";
     private static final String BANK_TRANSACTIONS_REJECTED = "bank-transaction-rejected-topic";
 
-    @PostConstruct
-    public void runBankAccountTopology() {
-        KafkaStreams kafkaStreams = new KafkaStreams(buildBankAccountTopology(),
-                new StreamsConfiguration().streamsConfig());
-
-        kafkaStreams.start();
-    }
 
     public Topology buildBankAccountTopology() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();

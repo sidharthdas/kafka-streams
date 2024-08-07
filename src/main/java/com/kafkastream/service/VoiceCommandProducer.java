@@ -26,6 +26,7 @@ public class VoiceCommandProducer {
     public void init() throws InterruptedException {
 
         while(true) {
+            System.out.println("Producing: " + i);
             Thread.sleep(10000);
             VoiceCommand voiceCommand = new VoiceCommand();
             voiceCommand.setId(id + (++i));
