@@ -31,7 +31,7 @@ public class VoiceCommandParserTopology {
     private final VoiceCommandProducer producer;
 
     @PostConstruct
-    public void runKafkaStream() throws InterruptedException {
+    public KafkaStreams runKafkaStream() throws InterruptedException {
         producer.init();
         Topology topology = voiceCommandParserTopology();
         KafkaStreams kafkaStreams = new KafkaStreams(topology, new StreamsConfiguration().streamsConfig());
@@ -39,18 +39,20 @@ public class VoiceCommandParserTopology {
         kafkaStreams.start();
         //When we shut-down the application, kafka stream will shutdown automatically
         //Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
+
+        return kafkaStreams;
     }
 
     public Topology voiceCommandParserTopology() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
-       /* Scenario:
-                * 1. Once you get the data in the stream, filter audio size > O parse the speech to text (mapValues)
-                * 2. Once it is parsed, split the data into 2 category i.e. recognized & unrecognized based un threshold
-                * 3. Unrecognized will go to unrecognized topic
-                * 4. recognized : split it to english or not-english language
-                * 5. Not-english will be translated to english
-                * 6. merge english & translated to english streams
-                * 7. put the data to Kstream*/
+        /* Scenario:
+         * 1. Once you get the data in the stream, filter audio size > O parse the speech to text (mapValues)
+         * 2. Once it is parsed, split the data into 2 category i.e. recognized & unrecognized based un threshold
+         * 3. Unrecognized will go to unrecognized topic
+         * 4. recognized : split it to english or not-english language
+         * 5. Not-english will be translated to english
+         * 6. merge english & translated to english streams
+         * 7. put the data to Kstream*/
 
         Map<String, KStream<String, ParsedVoiceCommand>> branches = streamsBuilder.stream(VOICE_COMMAND,
                         Consumed.with(Serdes.String(), new JsonSerde<>(VoiceCommand.class)))
@@ -60,7 +62,7 @@ public class VoiceCommandParserTopology {
                 .branch((k, v) -> v.getProbability() > THRESHOLD, Branched.as("recognized"))
                 .defaultBranch(Branched.as("un-recognized"));
 
-        System.out.println("Sidharth"+branches);
+        System.out.println("Sidharth" + branches);
         branches.get("branches-un-recognized")
                 .to(UNRECOGNISED_VOICE, Produced.with(Serdes.String(), new JsonSerde<>(ParsedVoiceCommand.class)));
 
@@ -73,6 +75,20 @@ public class VoiceCommandParserTopology {
                 .mapValues((k, v) -> translateService.toEnglish(v))
                 .merge(languageBranches.get("language-english"))
                 .to(RECOGNISED_VOICE, Produced.with(Serdes.String(), new JsonSerde<>(ParsedVoiceCommand.class)));
+
+        languageBranches.get("language-english")
+                .groupByKey()
+                .aggregate(() -> VoiceCommand.builder().build(),
+                        (key, value, aggregate) -> {
+                            aggregate.setLanguage(value.getLanguage());
+                            aggregate.setId(value.getId());
+                            aggregate.setAudio(new byte[10]);
+                            aggregate.setAudioCodec("Sidharth");
+
+                            return aggregate;
+                        },
+                        Materialized.with(Serdes.String(), new JsonSerde<VoiceCommand>(VoiceCommand.class))
+                );
 
         return streamsBuilder.build();
     }
