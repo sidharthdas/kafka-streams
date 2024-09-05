@@ -1,5 +1,4 @@
-
-# Kafka Streams
+ # Kafka Streams
 
 Topology: Read data from topic, filter, map, transform the data.
 
